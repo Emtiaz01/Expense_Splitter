@@ -16,6 +16,7 @@ namespace ExpenseSplitter.Data
         public DbSet<Expense> Expenses { get; set; }
         public DbSet<ExpenseSplit> ExpenseSplits { get; set; }
         public DbSet<Settlement> Settlements { get; set; }
+        public DbSet<Invitation> Invitations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

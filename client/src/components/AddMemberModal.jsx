@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { groupService } from "../services/apiService";
+import {
+  authService,
+  groupService,
+  invitationService,
+} from "../services/apiService";
 
 function AddMemberModal({ isOpen, onClose, groupId, onMemberAdded }) {
   const [email, setEmail] = useState("");
@@ -14,9 +18,21 @@ function AddMemberModal({ isOpen, onClose, groupId, onMemberAdded }) {
     setLoading(true);
 
     try {
-      // Search for user by email and add them
-      const result = await groupService.searchAndAddMember(groupId, email);
-      setSuccess(`${email} has been added to the group!`);
+      // First, try to search for the user
+      try {
+        const user = await authService.searchUserByEmail(email);
+
+        // User exists, add them directly
+        await groupService.addMember(groupId, user.userId);
+        setSuccess(`${email} has been added to the group!`);
+      } catch (searchError) {
+        // User doesn't exist, send invitation
+        await invitationService.sendInvitation(groupId, email);
+        setSuccess(
+          `Invitation sent to ${email}! They can join after registering. (Previous invitations have been replaced)`,
+        );
+      }
+
       setEmail("");
 
       // Wait a moment to show success message
@@ -24,11 +40,11 @@ function AddMemberModal({ isOpen, onClose, groupId, onMemberAdded }) {
         onMemberAdded();
         onClose();
         setSuccess("");
-      }, 1500);
+      }, 2000);
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Failed to add member. Make sure the email is registered.",
+          "Failed to add member or send invitation.",
       );
     } finally {
       setLoading(false);
@@ -56,7 +72,9 @@ function AddMemberModal({ isOpen, onClose, groupId, onMemberAdded }) {
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              The user must be registered on the platform
+              If the user is not registered, we'll send them an invitation
+              email. You can resend invitations to the same email - only the
+              latest one will work.
             </p>
           </div>
 

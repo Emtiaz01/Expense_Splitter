@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import GroupPage from "./pages/GroupPage";
 import SettlementPage from "./pages/SettlementPage";
+import AcceptInvitation from "./pages/AcceptInvitation";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -67,6 +68,11 @@ function App() {
                 <Navigate to="/dashboard" replace />
               )
             }
+          />
+
+          <Route
+            path="/accept-invitation"
+            element={<AcceptInvitation user={user} onLogin={handleLogin} />}
           />
 
           <Route

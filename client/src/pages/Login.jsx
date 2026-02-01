@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authService } from "../services/apiService";
+import { authService, invitationService } from "../services/apiService";
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -17,7 +17,23 @@ function Login({ onLogin }) {
     try {
       const response = await authService.login({ email, password });
       onLogin(response.user, response.token);
-      navigate("/dashboard");
+
+      // Check for pending invitation in localStorage
+      const pendingInvitation = localStorage.getItem("pendingInvitation");
+      if (pendingInvitation) {
+        try {
+          await invitationService.acceptInvitation(pendingInvitation);
+          const invitation =
+            await invitationService.verifyInvitation(pendingInvitation);
+          localStorage.removeItem("pendingInvitation");
+          navigate(`/group/${invitation.groupId}`);
+        } catch (invErr) {
+          localStorage.removeItem("pendingInvitation");
+          navigate("/dashboard");
+        }
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password");
     } finally {

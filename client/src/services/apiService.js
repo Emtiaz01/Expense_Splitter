@@ -107,3 +107,25 @@ export const balanceService = {
     return response.data;
   },
 };
+
+export const invitationService = {
+  async sendInvitation(groupId, email) {
+    const response = await api.post(`/invitation/send/${groupId}`, { email });
+    return response.data;
+  },
+
+  async verifyInvitation(token) {
+    const response = await api.get(`/invitation/verify/${token}`);
+    return response.data;
+  },
+
+  async acceptInvitation(token) {
+    const response = await api.post("/invitation/accept", { token });
+    return response.data;
+  },
+
+  async getPendingInvitations() {
+    const response = await api.get("/invitation/pending");
+    return response.data;
+  },
+};

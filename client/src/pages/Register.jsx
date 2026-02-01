@@ -1,11 +1,15 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { authService } from "../services/apiService";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { authService, invitationService } from "../services/apiService";
 
 function Register({ onLogin }) {
+  const [searchParams] = useSearchParams();
+  const invitationToken = searchParams.get("invitation");
+  const prefilledEmail = searchParams.get("email");
+
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
+    email: prefilledEmail || "",
     password: "",
     confirmPassword: "",
   });
@@ -31,7 +35,22 @@ function Register({ onLogin }) {
         password: formData.password,
       });
       onLogin(response.user, response.token);
-      navigate("/dashboard");
+
+      // If there's an invitation token, accept it after registration
+      if (invitationToken) {
+        try {
+          await invitationService.acceptInvitation(invitationToken);
+          // Get the invitation details to redirect to the group
+          const invitation =
+            await invitationService.verifyInvitation(invitationToken);
+          navigate(`/group/${invitation.groupId}`);
+        } catch (invErr) {
+          // Even if invitation fails, redirect to dashboard
+          navigate("/dashboard");
+        }
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
     } finally {
